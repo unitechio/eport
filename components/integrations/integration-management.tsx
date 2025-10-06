@@ -162,7 +162,7 @@ const mockIntegrations: Integration[] = [
     endpoint: "https://hooks.slack.com/services/...",
     config: {
       channel: "#infrastructure-alerts",
-      webhook: "T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX",
+      webhook: process.env.SLACK_WEBHOOK_URL,
     },
     metrics: {
       requests: 234,
