@@ -1,103 +1,135 @@
-import Image from "next/image";
+// src/app/page.tsx
+"use client";
 
-export default function Home() {
+import { useState, useEffect } from "react";
+import { Sidebar } from "@/app/layout/sidebar";
+import { Header } from "@/app/layout/header";
+import { DashboardOverview } from "@/components/dashboard/dashboard-overview";
+import { ServerList } from "@/app/servers/page";
+import { ServerDetail } from "@/app/servers/[id]/page";
+import { AlertsPage } from "@/components/alerts/alerts-page";
+import { UserManagement } from "@/components/users/user-management";
+import { IntegrationManagement } from "@/components/integrations/integration-management";
+import { ReportsAnalytics } from "@/components/reports/reports-analytics";
+import { SettingsConfiguration } from "@/components/settings/settings-configuration";
+import { SystemAudit } from "@/components/audit/system-audit";
+import { DockerManagement } from "@/components/docker/docker-management";
+import { KubernetesManagement } from "@/components/kubernetes/kubernetes-management";
+import { KubernetesConfiguration } from "@/components/kubernetes/kubernetes-configuration";
+import AuthGuard from "@/components/auth/AuthGuard";
+import { useAuth } from "@/hooks/useAuth";
+
+const tabTitles = {
+  dashboard: "Infrastructure Dashboard",
+  servers: "Server Management",
+  containers: "Docker Container Management",
+  monitoring: "Kubernetes Management",
+  alerts: "Alerts & Notifications",
+  database: "Database Management",
+  security: "Security Center",
+  integrations: "Integration Management",
+  reports: "Reports & Analytics",
+  activity: "Activity Logs",
+  users: "User Management",
+  settings: "System Settings",
+  audit: "System Audit & Impact Management",
+  "k8s-config": "Kubernetes Configuration",
+};
+
+export default function InfraCRMDashboard() {
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [isDark, setIsDark] = useState(false);
+  const [selectedServer, setSelectedServer] = useState<string | null>(null);
+  const [configuringServer, setConfiguringServer] = useState<string | null>(null);
+  const { logout } = useAuth();
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+    if (savedTheme === "dark" || (!savedTheme && prefersDark)) {
+      setIsDark(true);
+      document.documentElement.classList.add("dark");
+    }
+  }, []);
+
+  const handleThemeToggle = () => {
+    const newTheme = !isDark;
+    setIsDark(newTheme);
+
+    if (newTheme) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  };
+
+  const handleServerSelect = (serverId: string) => {
+    setSelectedServer(serverId);
+  };
+
+  const handleConfigureServer = (serverId: string) => {
+    setConfiguringServer(serverId);
+    setSelectedServer(serverId);
+  };
+
+  const renderContent = () => {
+    if (selectedServer) {
+      return <ServerDetail serverId={selectedServer} onBack={() => setSelectedServer(null)} />;
+    }
+
+    switch (activeTab) {
+      case "dashboard":
+        return <DashboardOverview />;
+      case "servers":
+        return <ServerList onServerSelect={handleServerSelect} onConfigureServer={handleConfigureServer} />;
+      case "containers":
+        return <DockerManagement />;
+      case "monitoring":
+        return <KubernetesManagement />;
+      case "alerts":
+        return <AlertsPage />;
+      case "users":
+        return <UserManagement />;
+      case "integrations":
+        return <IntegrationManagement />;
+      case "reports":
+        return <ReportsAnalytics />;
+      case "settings":
+        return <SettingsConfiguration />;
+      case "audit":
+        return <SystemAudit />;
+      case "k8s-config":
+        return <KubernetesConfiguration />;
+      case "database":
+        return <div className="p-6">Database management coming soon...</div>;
+      case "security":
+        return <div className="p-6">Security center coming soon...</div>;
+      case "activity":
+        return <div className="p-6">Activity logs coming soon...</div>;
+      default:
+        return <DashboardOverview />;
+    }
+  };
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <AuthGuard>
+      <div className="flex h-screen bg-background">
+        <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header
+            title={tabTitles[activeTab as keyof typeof tabTitles]}
+            onThemeToggle={handleThemeToggle}
+            isDark={isDark}
+            onLogout={logout}
+          />
+
+          <main className="flex-1 overflow-auto">{renderContent()}</main>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </div>
+    </AuthGuard>
   );
 }
